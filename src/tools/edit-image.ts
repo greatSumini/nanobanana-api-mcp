@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { ImageGenerator } from "../services/image-generator.js";
+import type { ImageGenerator, AspectRatio } from "../services/image-generator.js";
 
 /**
  * Creates the edit-image tool
@@ -19,6 +19,11 @@ export function createEditImageTool(generator: ImageGenerator, fixedModel?: "pro
       .array(z.string())
       .optional()
       .describe("Optional array of ABSOLUTE paths (full file system paths starting from root) to additional reference images to guide the editing. Each path must be absolute. Example: ['/Users/username/images/ref1.png', '/Users/username/images/ref2.png']. Relative paths are NOT accepted."),
+    aspect_ratio: z
+      .enum(["1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"])
+      .optional()
+      .default("16:9")
+      .describe("Aspect ratio for the edited image (default: 16:9)"),
   };
 
   // Only include model parameter if no fixed model is provided
@@ -50,7 +55,8 @@ export function createEditImageTool(generator: ImageGenerator, fixedModel?: "pro
           input.prompt,
           input.output_path,
           modelToUse,
-          input.reference_images_path
+          input.reference_images_path,
+          input.aspect_ratio as AspectRatio
         );
 
         return {

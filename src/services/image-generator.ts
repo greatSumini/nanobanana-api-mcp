@@ -3,6 +3,11 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 
 /**
+ * Supported aspect ratios for image generation
+ */
+export type AspectRatio = "1:1" | "2:3" | "3:2" | "3:4" | "4:3" | "4:5" | "5:4" | "9:16" | "16:9" | "21:9";
+
+/**
  * Service for generating and editing images using Google Gemini API
  */
 export class ImageGenerator {
@@ -11,7 +16,9 @@ export class ImageGenerator {
   constructor(apiKey?: string) {
     const key = apiKey || process.env.GOOGLE_API_KEY;
     if (!key) {
-      throw new Error("Google API key is required. Set GOOGLE_API_KEY environment variable or provide it in constructor.");
+      throw new Error(
+        "Google API key is required. Set GOOGLE_API_KEY environment variable or provide it in constructor."
+      );
     }
     this.ai = new GoogleGenAI({ apiKey: key });
   }
@@ -22,15 +29,18 @@ export class ImageGenerator {
    * @param outputPath - Path where the generated image will be saved
    * @param model - Model to use ('pro' or 'normal', default: 'pro')
    * @param referenceImagesPaths - Optional array of reference image paths
+   * @param aspectRatio - Optional aspect ratio for the image (default: '16:9')
    * @returns Path to the generated image
    */
   async generateImage(
     prompt: string,
     outputPath: string,
     model: "pro" | "normal" = "pro",
-    referenceImagesPaths?: string[]
+    referenceImagesPaths?: string[],
+    aspectRatio: AspectRatio = "16:9"
   ): Promise<string> {
-    const modelName = model === "pro" ? "gemini-3-pro-image-preview" : "gemini-2.5-flash-image";
+    const modelName =
+      model === "pro" ? "gemini-3-pro-image-preview" : "gemini-2.5-flash-image";
 
     // Build contents array
     const contents: any[] = [{ text: prompt }];
@@ -54,10 +64,7 @@ export class ImageGenerator {
       contents: contents,
       config: {
         responseModalities: ["TEXT", "IMAGE"],
-        imageConfig: {
-          aspectRatio: "16:9",
-          imageSize: "2K",
-        },
+        imageConfig: { aspectRatio },
       },
     });
 
@@ -97,6 +104,7 @@ export class ImageGenerator {
    * @param outputPath - Path where the edited image will be saved (defaults to imagePath)
    * @param model - Model to use ('pro' or 'normal', default: 'pro')
    * @param referenceImagesPaths - Optional array of additional reference image paths
+   * @param aspectRatio - Optional aspect ratio for the edited image (default: '16:9')
    * @returns Path to the edited image
    */
   async editImage(
@@ -104,10 +112,12 @@ export class ImageGenerator {
     prompt: string,
     outputPath?: string,
     model: "pro" | "normal" = "pro",
-    referenceImagesPaths?: string[]
+    referenceImagesPaths?: string[],
+    aspectRatio: AspectRatio = "16:9"
   ): Promise<string> {
     const finalOutputPath = outputPath || imagePath;
-    const modelName = model === "pro" ? "gemini-3-pro-image-preview" : "gemini-2.5-flash-image";
+    const modelName =
+      model === "pro" ? "gemini-3-pro-image-preview" : "gemini-2.5-flash-image";
 
     // Build contents array with the image to edit
     const contents: any[] = [
@@ -140,7 +150,7 @@ export class ImageGenerator {
       config: {
         responseModalities: ["TEXT", "IMAGE"],
         imageConfig: {
-          aspectRatio: "16:9",
+          aspectRatio,
           imageSize: "2K",
         },
       },

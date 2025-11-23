@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { ImageGenerator } from "../services/image-generator.js";
+import type { ImageGenerator, AspectRatio } from "../services/image-generator.js";
 
 /**
  * Creates the generate-image tool
@@ -15,6 +15,11 @@ export function createGenerateImageTool(generator: ImageGenerator, fixedModel?: 
       .array(z.string())
       .optional()
       .describe("Optional array of ABSOLUTE paths (full file system paths starting from root) to reference images to guide the generation. Each path must be absolute. Example: ['/Users/username/images/ref1.png', '/Users/username/images/ref2.png']. Relative paths are NOT accepted."),
+    aspect_ratio: z
+      .enum(["1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"])
+      .optional()
+      .default("16:9")
+      .describe("Aspect ratio for the generated image (default: 16:9)"),
   };
 
   // Only include model parameter if no fixed model is provided
@@ -45,7 +50,8 @@ export function createGenerateImageTool(generator: ImageGenerator, fixedModel?: 
           input.prompt,
           input.output_path,
           modelToUse,
-          input.reference_images_path
+          input.reference_images_path,
+          input.aspect_ratio as AspectRatio
         );
 
         return {
