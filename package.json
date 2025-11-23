@@ -1,6 +1,6 @@
 {
   "name": "nanobanana-api-mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MCP server for generating and editing images using Google Gemini API",
   "main": "dist/server.js",
   "type": "module",
@@ -21,8 +21,8 @@
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src tests --ext .ts",
-    "lint:fix": "eslint src tests --ext .ts --fix",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
     "prepublishOnly": "npm run lint && npm run typecheck && npm run build && npm test"
   },
   "keywords": [
