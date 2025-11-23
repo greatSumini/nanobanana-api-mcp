@@ -44,7 +44,7 @@ This will automatically configure the MCP server in your chosen client.
 
 ## Prerequisites
 
-You need a Google API key with access to Gemini models. Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey).
+You need a Google API key with access to Gemini models. Get your API key from [Google AI Studio](https://aistudio.google.com/api-keys).
 
 You can provide the API key via CLI argument:
 
