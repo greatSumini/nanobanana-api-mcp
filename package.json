@@ -1,6 +1,6 @@
 {
   "name": "nanobanana-api-mcp",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "MCP server for generating and editing images using Google Gemini API",
   "main": "dist/server.js",
   "type": "module",
