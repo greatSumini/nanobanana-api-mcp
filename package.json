@@ -1,11 +1,11 @@
 {
-  "name": "nanobanana-mcp",
-  "version": "0.0.0",
+  "name": "nanobanana-api-mcp",
+  "version": "0.1.0",
   "description": "MCP server for generating and editing images using Google Gemini API",
   "main": "dist/server.js",
   "type": "module",
   "bin": {
-    "nanobanana-mcp": "dist/server.js"
+    "nanobanana-api-mcp": "dist/server.js"
   },
   "files": [
     "dist/**/*",
@@ -38,12 +38,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/choesumin/nanobanana-mcp.git"
+    "url": "https://github.com/choesumin/nanobanana-api-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/choesumin/nanobanana-mcp/issues"
+    "url": "https://github.com/choesumin/nanobanana-api-mcp/issues"
   },
-  "homepage": "https://github.com/choesumin/nanobanana-mcp#readme",
+  "homepage": "https://github.com/choesumin/nanobanana-api-mcp#readme",
   "engines": {
     "node": ">=18.0.0"
   },

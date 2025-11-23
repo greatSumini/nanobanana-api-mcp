@@ -1,6 +1,6 @@
-# Nanobanana MCP
+# Nanobanana API MCP
 
-[![npm version](https://badge.fury.io/js/nanobanana-mcp.svg)](https://www.npmjs.com/package/nanobanana-mcp)
+[![npm version](https://badge.fury.io/js/nanobanana-api-mcp.svg)](https://www.npmjs.com/package/nanobanana-api-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://www.typescriptlang.org/)
@@ -21,7 +21,7 @@ MCP (Model Context Protocol) server for generating and editing images using Goog
 ### NPM
 
 ```bash
-npm install -g nanobanana-mcp
+npm install -g nanobanana-api-mcp
 ```
 
 ### Smithery
@@ -29,7 +29,7 @@ npm install -g nanobanana-mcp
 To install Nanobanana MCP Server for any client automatically via [Smithery](https://smithery.ai):
 
 ```bash
-npx -y @smithery/cli@latest install nanobanana-mcp --client <CLIENT_NAME>
+npx -y @smithery/cli@latest install nanobanana-api-mcp --client <CLIENT_NAME>
 ```
 
 Available clients: `cursor`, `claude`, `vscode`, `windsurf`, `cline`, `zed`, etc.
@@ -37,7 +37,7 @@ Available clients: `cursor`, `claude`, `vscode`, `windsurf`, `cline`, `zed`, etc
 **Example for Cursor:**
 
 ```bash
-npx -y @smithery/cli@latest install nanobanana-mcp --client cursor
+npx -y @smithery/cli@latest install nanobanana-api-mcp --client cursor
 ```
 
 This will automatically configure the MCP server in your chosen client.
@@ -49,14 +49,14 @@ You need a Google API key with access to Gemini models. Get your API key from [G
 You can provide the API key via CLI argument:
 
 ```bash
-nanobanana-mcp --apiKey "your-api-key-here"
+nanobanana-api-mcp --apiKey "your-api-key-here"
 ```
 
 Or set it as an environment variable:
 
 ```bash
 export GOOGLE_API_KEY="your-api-key-here"
-nanobanana-mcp
+nanobanana-api-mcp
 ```
 
 ## MCP Client Integration
@@ -81,7 +81,7 @@ Add the following configuration to your `~/.cursor/mcp.json` file:
   "mcpServers": {
     "nanobanana": {
       "command": "npx",
-      "args": ["-y", "nanobanana-mcp", "--apiKey", "your-api-key-here"]
+      "args": ["-y", "nanobanana-api-mcp", "--apiKey", "your-api-key-here"]
     }
   }
 }
@@ -94,7 +94,7 @@ Optionally, you can fix the model to use for all operations:
   "mcpServers": {
     "nanobanana": {
       "command": "npx",
-      "args": ["-y", "nanobanana-mcp", "--apiKey", "your-api-key-here", "--model", "pro"]
+      "args": ["-y", "nanobanana-api-mcp", "--apiKey", "your-api-key-here", "--model", "pro"]
     }
   }
 }
@@ -108,7 +108,7 @@ Optionally, you can fix the model to use for all operations:
 Run this command:
 
 ```sh
-claude mcp add nanobanana -- npx -y nanobanana-mcp
+claude mcp add nanobanana -- npx -y nanobanana-api-mcp
 ```
 
 Make sure to set your `GOOGLE_API_KEY` environment variable before starting Claude Code.
@@ -126,7 +126,7 @@ Add this to your VS Code MCP config file. See [VS Code MCP docs](https://code.vi
     "nanobanana": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "nanobanana-mcp", "--apiKey", "your-api-key-here"]
+      "args": ["-y", "nanobanana-api-mcp", "--apiKey", "your-api-key-here"]
     }
   }
 }
@@ -144,7 +144,7 @@ Add this to your Windsurf MCP config file:
   "mcpServers": {
     "nanobanana": {
       "command": "npx",
-      "args": ["-y", "nanobanana-mcp", "--apiKey", "your-api-key-here"]
+      "args": ["-y", "nanobanana-api-mcp", "--apiKey", "your-api-key-here"]
     }
   }
 }
@@ -166,7 +166,7 @@ Add this to your Windsurf MCP config file:
   "mcpServers": {
     "nanobanana": {
       "command": "npx",
-      "args": ["-y", "nanobanana-mcp", "--apiKey", "your-api-key-here"]
+      "args": ["-y", "nanobanana-api-mcp", "--apiKey", "your-api-key-here"]
     }
   }
 }
@@ -184,7 +184,7 @@ Open Claude Desktop developer settings and edit your `claude_desktop_config.json
   "mcpServers": {
     "nanobanana": {
       "command": "npx",
-      "args": ["-y", "nanobanana-mcp", "--apiKey", "your-api-key-here"]
+      "args": ["-y", "nanobanana-api-mcp", "--apiKey", "your-api-key-here"]
     }
   }
 }
@@ -203,7 +203,7 @@ Add this to your Zed `settings.json`:
     "nanobanana": {
       "source": "custom",
       "command": "npx",
-      "args": ["-y", "nanobanana-mcp", "--apiKey", "your-api-key-here"]
+      "args": ["-y", "nanobanana-api-mcp", "--apiKey", "your-api-key-here"]
     }
   }
 }
@@ -221,7 +221,7 @@ Add this to your Roo Code MCP configuration file:
   "mcpServers": {
     "nanobanana": {
       "command": "npx",
-      "args": ["-y", "nanobanana-mcp", "--apiKey", "your-api-key-here"]
+      "args": ["-y", "nanobanana-api-mcp", "--apiKey", "your-api-key-here"]
     }
   }
 }
@@ -333,17 +333,17 @@ Run the server directly:
 
 ```bash
 # Using CLI argument for API key (recommended)
-nanobanana-mcp --apiKey "your-api-key-here"
+nanobanana-api-mcp --apiKey "your-api-key-here"
 
 # Using environment variable for API key
 export GOOGLE_API_KEY="your-api-key-here"
-nanobanana-mcp
+nanobanana-api-mcp
 
 # Fix model for all operations
-nanobanana-mcp --apiKey "your-api-key-here" --model pro
+nanobanana-api-mcp --apiKey "your-api-key-here" --model pro
 
 # Using HTTP transport
-nanobanana-mcp --apiKey "your-api-key-here" --transport http --port 5000
+nanobanana-api-mcp --apiKey "your-api-key-here" --transport http --port 5000
 ```
 
 **CLI Options:**
