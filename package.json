@@ -1,0 +1,68 @@
+{
+  "name": "nanobanana-mcp",
+  "version": "0.0.0",
+  "description": "MCP server for generating and editing images using Google Gemini API",
+  "main": "dist/server.js",
+  "type": "module",
+  "bin": {
+    "nanobanana-mcp": "dist/server.js"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "tsx src/server.ts",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
+    "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src tests --ext .ts",
+    "lint:fix": "eslint src tests --ext .ts --fix",
+    "prepublishOnly": "npm run lint && npm run typecheck && npm run build && npm test"
+  },
+  "keywords": [
+    "mcp",
+    "image-generation",
+    "image-editing",
+    "modelcontextprotocol",
+    "gemini",
+    "google-ai",
+    "ai-image"
+  ],
+  "author": "choesumin",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/choesumin/nanobanana-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/choesumin/nanobanana-mcp/issues"
+  },
+  "homepage": "https://github.com/choesumin/nanobanana-mcp#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@google/genai": "^1.30.0",
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "commander": "^14.0.1",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.11",
+    "@types/node": "^20.10.6",
+    "@typescript-eslint/eslint-plugin": "^6.17.0",
+    "@typescript-eslint/parser": "^6.17.0",
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "rimraf": "^6.0.1",
+    "ts-jest": "^29.1.1",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}
