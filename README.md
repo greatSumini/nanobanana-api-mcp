@@ -239,18 +239,29 @@ Generates an image based on a text prompt using Google Gemini API.
 
 **Parameters:**
 - `prompt` (string, required): Text description of the image to generate
-- `output_path` (string, required): Absolute path where the generated image will be saved
+- `output_path` (string, optional): Absolute path where the generated image will be saved. If not provided, returns base64 encoded image data instead
 - `model` (enum, optional): Model to use - "pro" (default) or "normal" (not shown if --model is provided via CLI)
   - `pro`: gemini-3-pro-image-preview (higher quality)
   - `normal`: gemini-2.5-flash-image (faster)
 - `reference_images_path` (string[], optional): Array of absolute reference image paths to guide the generation
+- `aspect_ratio` (enum, optional): Aspect ratio for the image - "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9" (default), "21:9"
 
-**Example:**
+**Example (save to file):**
 ```json
 {
   "prompt": "A serene mountain landscape at sunset with a lake in the foreground",
-  "output_path": "./generated_image.png",
-  "model": "pro"
+  "output_path": "/absolute/path/to/generated_image.png",
+  "model": "pro",
+  "aspect_ratio": "16:9"
+}
+```
+
+**Example (return base64):**
+```json
+{
+  "prompt": "A serene mountain landscape at sunset with a lake in the foreground",
+  "model": "pro",
+  "aspect_ratio": "16:9"
 }
 ```
 
@@ -258,9 +269,9 @@ Generates an image based on a text prompt using Google Gemini API.
 ```json
 {
   "prompt": "An office group photo of these people, they are making funny faces",
-  "output_path": "./group_photo.png",
+  "output_path": "/absolute/path/to/group_photo.png",
   "model": "pro",
-  "reference_images_path": ["./person1.jpg", "./person2.jpg", "./person3.jpg"]
+  "reference_images_path": ["/absolute/path/to/person1.jpg", "/absolute/path/to/person2.jpg"]
 }
 ```
 
@@ -269,37 +280,61 @@ Generates an image based on a text prompt using Google Gemini API.
 Edits an existing image based on a text prompt using Google Gemini API.
 
 **Parameters:**
-- `path` (string, required): Absolute path to the image to edit
+- `path` (string, optional): Absolute path to the image to edit. Either `path` or `image_base64` must be provided
+- `image_base64` (string, optional): Base64 encoded image data to edit. Either `path` or `image_base64` must be provided
+- `mime_type` (string, optional): MIME type of the base64 image (e.g., "image/png", "image/jpeg"). Required when using `image_base64`
 - `prompt` (string, required): Text description of the edits to make
-- `output_path` (string, optional): Absolute path where the edited image will be saved (defaults to the same as `path`)
+- `output_path` (string, optional): Absolute path where the edited image will be saved. If not provided:
+  - When using `path`: defaults to overwriting the input file
+  - When using `image_base64`: returns base64 encoded image data instead
 - `model` (enum, optional): Model to use - "pro" (default) or "normal" (not shown if --model is provided via CLI)
 - `reference_images_path` (string[], optional): Array of absolute additional reference image paths to guide the editing
+- `aspect_ratio` (enum, optional): Aspect ratio for the image - "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9" (default), "21:9"
 
-**Example:**
+**Example (path input, save to file):**
 ```json
 {
-  "path": "./original_image.png",
+  "path": "/absolute/path/to/original_image.png",
   "prompt": "Add a blue sky with fluffy clouds in the background",
-  "output_path": "./edited_image.png",
+  "output_path": "/absolute/path/to/edited_image.png",
   "model": "pro"
 }
 ```
 
-**Edit in place (overwrites original):**
+**Example (path input, overwrite original):**
 ```json
 {
-  "path": "./image.png",
+  "path": "/absolute/path/to/image.png",
   "prompt": "Make the colors more vibrant and increase contrast"
+}
+```
+
+**Example (base64 input, return base64):**
+```json
+{
+  "image_base64": "iVBORw0KGgoAAAANSUhEUgAA...",
+  "mime_type": "image/png",
+  "prompt": "Add a sunset filter to this image"
+}
+```
+
+**Example (base64 input, save to file):**
+```json
+{
+  "image_base64": "iVBORw0KGgoAAAANSUhEUgAA...",
+  "mime_type": "image/png",
+  "prompt": "Add a sunset filter to this image",
+  "output_path": "/absolute/path/to/output.png"
 }
 ```
 
 **With reference images:**
 ```json
 {
-  "path": "./portrait.jpg",
+  "path": "/absolute/path/to/portrait.jpg",
   "prompt": "Apply the style and lighting from these reference images",
-  "output_path": "./styled_portrait.jpg",
-  "reference_images_path": ["./style_ref1.jpg", "./style_ref2.jpg"]
+  "output_path": "/absolute/path/to/styled_portrait.jpg",
+  "reference_images_path": ["/absolute/path/to/style_ref1.jpg", "/absolute/path/to/style_ref2.jpg"]
 }
 ```
 

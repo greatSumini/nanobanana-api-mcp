@@ -9,12 +9,23 @@ import type { ImageGenerator, AspectRatio } from "../services/image-generator.js
 export function createEditImageTool(generator: ImageGenerator, fixedModel?: "pro" | "normal") {
   // Build schema conditionally based on whether a fixed model is provided
   const baseSchema = {
-    path: z.string().describe("ABSOLUTE path (full file system path starting from root) to the image to edit. Example: /Users/username/images/input.png or C:\\Users\\username\\images\\input.png. Relative paths are NOT accepted."),
+    path: z
+      .string()
+      .optional()
+      .describe("ABSOLUTE path (full file system path starting from root) to the image to edit. Example: /Users/username/images/input.png or C:\\Users\\username\\images\\input.png. Relative paths are NOT accepted. Either 'path' or 'image_base64' must be provided."),
+    image_base64: z
+      .string()
+      .optional()
+      .describe("Base64 encoded image data to edit. Either 'path' or 'image_base64' must be provided."),
+    mime_type: z
+      .string()
+      .optional()
+      .describe("MIME type of the base64 image (e.g., 'image/png', 'image/jpeg'). Required when using 'image_base64'."),
     prompt: z.string().describe("Text description of the edits to make"),
     output_path: z
       .string()
       .optional()
-      .describe("ABSOLUTE path (full file system path starting from root) where the edited image will be saved (defaults to the same as path). Example: /Users/username/images/output.png or C:\\Users\\username\\images\\output.png. Relative paths are NOT accepted."),
+      .describe("Optional ABSOLUTE path (full file system path starting from root) where the edited image will be saved. If not provided: (1) when 'path' is used, defaults to overwriting the input file, (2) when 'image_base64' is used, returns base64 data instead. Example: /Users/username/images/output.png or C:\\Users\\username\\images\\output.png. Relative paths are NOT accepted."),
     reference_images_path: z
       .array(z.string())
       .optional()
@@ -47,26 +58,68 @@ export function createEditImageTool(generator: ImageGenerator, fixedModel?: "pro
     inputSchema,
     async handler(input: InputType) {
       try {
+        // Validate input: either path or image_base64 must be provided
+        if (!input.path && !input.image_base64) {
+          throw new Error("Either 'path' or 'image_base64' must be provided");
+        }
+
+        if (input.path && input.image_base64) {
+          throw new Error("Cannot provide both 'path' and 'image_base64'. Choose one.");
+        }
+
+        if (input.image_base64 && !input.mime_type) {
+          throw new Error("'mime_type' is required when using 'image_base64'");
+        }
+
         // Use fixed model if provided, otherwise use input model or default to 'pro'
         const modelToUse = fixedModel || (input as any).model || "pro";
 
-        const outputPath = await generator.editImage(
-          input.path,
+        // Prepare image input
+        let imageInput: string | { base64: string; mimeType: string };
+        let defaultOutputPath: string | undefined;
+
+        if (input.path) {
+          // Path-based input
+          imageInput = input.path;
+          defaultOutputPath = input.output_path || input.path; // Default to overwriting
+        } else {
+          // Base64 input
+          imageInput = {
+            base64: input.image_base64!,
+            mimeType: input.mime_type!,
+          };
+          defaultOutputPath = input.output_path; // undefined if not provided
+        }
+
+        const result = await generator.editImage(
+          imageInput,
           input.prompt,
-          input.output_path,
+          defaultOutputPath,
           modelToUse,
           input.reference_images_path,
           input.aspect_ratio as AspectRatio
         );
 
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: `Image successfully edited and saved to: ${outputPath}`,
-            },
-          ],
-        };
+        // Check if result is a file path or base64 string
+        if (defaultOutputPath) {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `Image successfully edited and saved to: ${result}`,
+              },
+            ],
+          };
+        } else {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `Image successfully edited. Base64 data:\n${result}`,
+              },
+            ],
+          };
+        }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         return {

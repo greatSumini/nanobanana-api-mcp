@@ -93,10 +93,15 @@ export function createToolName(generator: ImageGenerator, fixedModel?: "pro" | "
   - `pro`: gemini-3-pro-image-preview (higher quality)
   - `normal`: gemini-2.5-flash-image (faster)
 - **Image generation**: Uses Google Generative AI SDK to generate images from text prompts
+  - Optional output_path: saves to file if provided, returns base64 if omitted
 - **Image editing**: Uses the same API with image inputs to edit existing images
+  - Supports both path-based and base64 input
+  - Optional output_path: saves to file if provided, returns base64 if omitted (for base64 input) or overwrites original (for path input)
 - **Reference images**: Supports multiple reference images to guide generation/editing
 - **Aspect ratios**: Supports 1:1, 2:3, 3:2, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9, 21:9 (default: 16:9)
-- **Output**: Base64 decoded images saved to specified absolute paths
+- **Output modes**:
+  - File-based: Images saved to specified absolute paths
+  - Base64: Raw base64 strings returned when output_path is not provided
 
 ### Testing Strategy
 
@@ -114,19 +119,24 @@ export function createToolName(generator: ImageGenerator, fixedModel?: "pro" | "
 The ImageGenerator service handles:
 1. **API key management**: Accepts key via constructor or GOOGLE_API_KEY environment variable
 2. **Image generation**:
-   - Accepts text prompt, output path, model type, optional reference images, and aspect ratio
+   - Accepts text prompt, optional output path, model type, optional reference images, and aspect ratio
    - Builds contents array with prompt and reference images
    - Calls Gemini API with responseModalities: ["TEXT", "IMAGE"]
    - Extracts base64 image data from response
-   - Saves to specified output path
+   - Returns base64 string if no output path provided, otherwise saves to file and returns path
 3. **Image editing**:
+   - Accepts either file path or base64 input with MIME type
    - Similar to generation but includes the source image to edit
    - Supports additional reference images for style guidance
-   - Can overwrite original or save to new path
+   - Flexible output modes:
+     - Path input + no output_path: overwrites original file
+     - Path input + output_path: saves to specified path
+     - Base64 input + no output_path: returns base64
+     - Base64 input + output_path: saves to specified path
 4. **File handling**:
    - Automatically creates output directories if they don't exist
    - Supports JPEG, PNG, GIF, and WebP formats
-   - Determines MIME type from file extension
+   - Determines MIME type from file extension or uses provided MIME type for base64 input
 
 ### Server Lifecycle (HTTP Mode)
 

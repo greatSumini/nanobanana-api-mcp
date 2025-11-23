@@ -10,7 +10,10 @@ export function createGenerateImageTool(generator: ImageGenerator, fixedModel?: 
   // Build schema conditionally based on whether a fixed model is provided
   const baseSchema = {
     prompt: z.string().describe("Text description of the image to generate"),
-    output_path: z.string().describe("ABSOLUTE path (full file system path starting from root) where the generated image will be saved. Example: /Users/username/images/output.png or C:\\Users\\username\\images\\output.png. Relative paths are NOT accepted."),
+    output_path: z
+      .string()
+      .optional()
+      .describe("Optional ABSOLUTE path (full file system path starting from root) where the generated image will be saved. If not provided, returns base64 encoded image data instead. Example: /Users/username/images/output.png or C:\\Users\\username\\images\\output.png. Relative paths are NOT accepted."),
     reference_images_path: z
       .array(z.string())
       .optional()
@@ -46,7 +49,7 @@ export function createGenerateImageTool(generator: ImageGenerator, fixedModel?: 
         // Use fixed model if provided, otherwise use input model or default to 'pro'
         const modelToUse = fixedModel || (input as any).model || "pro";
 
-        const outputPath = await generator.generateImage(
+        const result = await generator.generateImage(
           input.prompt,
           input.output_path,
           modelToUse,
@@ -54,14 +57,26 @@ export function createGenerateImageTool(generator: ImageGenerator, fixedModel?: 
           input.aspect_ratio as AspectRatio
         );
 
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: `Image successfully generated and saved to: ${outputPath}`,
-            },
-          ],
-        };
+        // Check if result is a file path or base64 string
+        if (input.output_path) {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `Image successfully generated and saved to: ${result}`,
+              },
+            ],
+          };
+        } else {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `Image successfully generated. Base64 data:\n${result}`,
+              },
+            ],
+          };
+        }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         return {

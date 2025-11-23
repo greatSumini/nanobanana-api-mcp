@@ -26,15 +26,15 @@ export class ImageGenerator {
   /**
    * Generates an image based on a text prompt
    * @param prompt - Text description of the image to generate
-   * @param outputPath - Path where the generated image will be saved
+   * @param outputPath - Optional path where the generated image will be saved
    * @param model - Model to use ('pro' or 'normal', default: 'pro')
    * @param referenceImagesPaths - Optional array of reference image paths
    * @param aspectRatio - Optional aspect ratio for the image (default: '16:9')
-   * @returns Path to the generated image
+   * @returns Path to the generated image or base64 string if no output path provided
    */
   async generateImage(
     prompt: string,
-    outputPath: string,
+    outputPath: string | undefined,
     model: "pro" | "normal" = "pro",
     referenceImagesPaths?: string[],
     aspectRatio: AspectRatio = "16:9"
@@ -81,6 +81,13 @@ export class ImageGenerator {
     for (const part of candidate.content.parts) {
       if (part.inlineData && part.inlineData.data) {
         const imageData = part.inlineData.data;
+
+        // If no output path provided, return base64 string
+        if (!outputPath) {
+          return imageData;
+        }
+
+        // Otherwise save to file
         const buffer = Buffer.from(imageData, "base64");
 
         // Ensure directory exists
@@ -99,33 +106,46 @@ export class ImageGenerator {
 
   /**
    * Edits an existing image based on a text prompt
-   * @param imagePath - Path to the image to edit
+   * @param imageInput - Path to the image or base64 string with mime type
    * @param prompt - Text description of the edits to make
-   * @param outputPath - Path where the edited image will be saved (defaults to imagePath)
+   * @param outputPath - Optional path where the edited image will be saved
    * @param model - Model to use ('pro' or 'normal', default: 'pro')
    * @param referenceImagesPaths - Optional array of additional reference image paths
    * @param aspectRatio - Optional aspect ratio for the edited image (default: '16:9')
-   * @returns Path to the edited image
+   * @returns Path to the edited image or base64 string if no output path provided
    */
   async editImage(
-    imagePath: string,
+    imageInput: string | { base64: string; mimeType: string },
     prompt: string,
     outputPath?: string,
     model: "pro" | "normal" = "pro",
     referenceImagesPaths?: string[],
     aspectRatio: AspectRatio = "16:9"
   ): Promise<string> {
-    const finalOutputPath = outputPath || imagePath;
     const modelName =
       model === "pro" ? "gemini-3-pro-image-preview" : "gemini-2.5-flash-image";
+
+    // Determine if input is path or base64
+    let imageData: string;
+    let mimeType: string;
+
+    if (typeof imageInput === "string") {
+      // Path input
+      imageData = this.readImageAsBase64(imageInput);
+      mimeType = this.getMimeType(imageInput);
+    } else {
+      // Base64 input
+      imageData = imageInput.base64;
+      mimeType = imageInput.mimeType;
+    }
 
     // Build contents array with the image to edit
     const contents: any[] = [
       { text: prompt },
       {
         inlineData: {
-          mimeType: this.getMimeType(imagePath),
-          data: this.readImageAsBase64(imagePath),
+          mimeType,
+          data: imageData,
         },
       },
     ];
@@ -169,16 +189,23 @@ export class ImageGenerator {
     for (const part of candidate.content.parts) {
       if (part.inlineData && part.inlineData.data) {
         const imageData = part.inlineData.data;
+
+        // If no output path provided, return base64 string
+        if (!outputPath) {
+          return imageData;
+        }
+
+        // Otherwise save to file
         const buffer = Buffer.from(imageData, "base64");
 
         // Ensure directory exists
-        const dir = path.dirname(finalOutputPath);
+        const dir = path.dirname(outputPath);
         if (!fs.existsSync(dir)) {
           fs.mkdirSync(dir, { recursive: true });
         }
 
-        fs.writeFileSync(finalOutputPath, buffer);
-        return finalOutputPath;
+        fs.writeFileSync(outputPath, buffer);
+        return outputPath;
       }
     }
 
