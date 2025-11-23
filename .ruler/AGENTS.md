@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Nanobanana MCP is a Model Context Protocol (MCP) server that enables LLMs to fetch files and directory trees from GitHub repositories. The server can be configured with a default repository or work with per-request repository parameters.
+Nanobanana API MCP is a Model Context Protocol (MCP) server that enables LLMs to generate and edit images using Google Gemini API. The server supports text-to-image generation, image editing with prompts, reference images for guidance, and aspect ratio customization.
 
 ## Build and Development Commands
 
@@ -47,71 +47,86 @@ The server supports two transport modes:
 
 **Key architectural decision**: Each HTTP request creates a fresh `McpServer` instance and transport to prevent request ID collisions in concurrent scenarios.
 
-### Repository Configuration Modes
+### Model Configuration Modes
 
-The server operates in two distinct modes:
+The server operates with optional fixed model configuration:
 
-1. **With repoIdentifier** (CLI argument `--repoIdentifier owner/repo/branch`): All tools default to this repository, requiring only paths from the user.
-2. **Without repoIdentifier**: Tools require full repository coordinates (owner, repo, branch) for each request.
+1. **With --model flag** (CLI argument `--model pro|normal`): All tools use this fixed model, and the model parameter is hidden from tool schemas.
+2. **Without --model flag**: Tools expose a model parameter allowing per-request model selection (default: 'pro').
 
 This dual-mode design is implemented via conditional Zod schemas in each tool's `createTool` function (see src/tools/*.ts).
 
 ### Module Structure
 
 - **src/server.ts**: Entry point, CLI parsing, server lifecycle, transport setup
-- **src/config/arguments.ts**: Repository identifier parsing and validation
-- **src/services/github-fetcher.ts**: GitHub API integration (raw files, tree API)
-- **src/services/tree-formatter.ts**: Basic unix-style tree formatting
-- **src/services/enhanced-tree-formatter.ts**: Advanced tree formatting with sizes, depth limits, filtering
-- **src/tools/**: MCP tool implementations (fetch-file, fetch-subdir-tree, fetch-sub-tree)
-- **src/types/index.ts**: TypeScript interfaces and types
-- **src/utils/path-utils.ts**: Path normalization utilities
+- **src/services/image-generator.ts**: Image generation and editing service using Google Gemini API
+- **src/tools/generate-image.ts**: MCP tool for generating images from text prompts
+- **src/tools/edit-image.ts**: MCP tool for editing existing images with text prompts
 
 ### Tool Creation Pattern
 
 Each tool follows this pattern:
 ```typescript
-export function createToolName(fetcher: GitHubFetcher, repoIdentifier?: RepoIdentifier) {
-  // Conditional schema based on repoIdentifier presence
-  const inputSchema = repoIdentifier ? /* simpler schema */ : /* full schema */;
+export function createToolName(generator: ImageGenerator, fixedModel?: "pro" | "normal") {
+  // Conditional schema based on fixedModel presence
+  const baseSchema = { /* base parameters */ };
+  const inputSchema = fixedModel
+    ? z.object(baseSchema)
+    : z.object({ ...baseSchema, model: z.enum(["pro", "normal"]) });
 
   return {
     name: 'tool-name',
-    description: /* conditional description */,
+    description: /* tool description */,
     inputSchema,
     async handler(input) {
-      // Extract params from repoIdentifier or input
-      // Call fetcher service
-      // Format and return response
+      // Use fixedModel or input.model
+      // Call generator service
+      // Return response with image path
     }
   };
 }
 ```
 
-### GitHub API Integration
+### Google Gemini API Integration
 
-- **File fetching**: Uses `https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}`
-- **Tree fetching**: Uses `https://api.github.com/repos/{owner}/{repo}/git/trees/{branch}?recursive=1`
-- **Path normalization**: All paths are normalized by removing leading slashes (handled in src/utils/path-utils.ts)
+- **Models available**:
+  - `pro`: gemini-3-pro-image-preview (higher quality)
+  - `normal`: gemini-2.5-flash-image (faster)
+- **Image generation**: Uses Google Generative AI SDK to generate images from text prompts
+- **Image editing**: Uses the same API with image inputs to edit existing images
+- **Reference images**: Supports multiple reference images to guide generation/editing
+- **Aspect ratios**: Supports 1:1, 2:3, 3:2, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9, 21:9 (default: 16:9)
+- **Output**: Base64 decoded images saved to specified absolute paths
 
 ### Testing Strategy
 
-- **Unit tests**: Individual services, tools, and utilities (tests/unit/)
-- **Integration tests**: Tool creation and schema validation (tests/integration/)
-- **Test isolation**: Uses Jest with ES modules support (`NODE_OPTIONS=--experimental-vm-modules`)
-- **Coverage target**: 79 tests covering all core functionality
+- **Test framework**: Jest with ES modules support (`NODE_OPTIONS=--experimental-vm-modules`)
+- **Test location**: Currently no test files exist (tests/ directory is empty)
+- **Test commands**:
+  - `npm test`: Run all tests
+  - `npm run test:watch`: Watch mode for TDD
+  - `npm run test:coverage`: Generate coverage report
 
 ## Key Implementation Details
 
-### Tree Formatting
+### Image Processing
 
-Two formatters exist:
-1. **tree-formatter.ts**: Basic unix-style tree (used by fetch-subdir-tree)
-2. **enhanced-tree-formatter.ts**: Advanced features (used by fetch-sub-tree):
-   - File/directory sizes with human-readable formatting
-   - Depth limiting (maxDepth parameter)
-   - File extension filtering (fileExtFilter parameter)
-   - Statistics summary (files, directories, total size)
+The ImageGenerator service handles:
+1. **API key management**: Accepts key via constructor or GOOGLE_API_KEY environment variable
+2. **Image generation**:
+   - Accepts text prompt, output path, model type, optional reference images, and aspect ratio
+   - Builds contents array with prompt and reference images
+   - Calls Gemini API with responseModalities: ["TEXT", "IMAGE"]
+   - Extracts base64 image data from response
+   - Saves to specified output path
+3. **Image editing**:
+   - Similar to generation but includes the source image to edit
+   - Supports additional reference images for style guidance
+   - Can overwrite original or save to new path
+4. **File handling**:
+   - Automatically creates output directories if they don't exist
+   - Supports JPEG, PNG, GIF, and WebP formats
+   - Determines MIME type from file extension
 
 ### Server Lifecycle (HTTP Mode)
 
@@ -133,19 +148,37 @@ This project uses ES modules exclusively:
 
 1. Create tool file in src/tools/ following the tool creation pattern
 2. Import and call tool creator in src/server.ts `createServerInstance()`
-3. Register tool with `server.registerTool()`
-4. Add unit tests in tests/unit/tools/
-5. Update integration tests in tests/integration/tools.test.ts
+3. Register tool with `server.registerTool()`:
+   ```typescript
+   server.registerTool(
+     toolName.name,
+     {
+       title: "Tool Title",
+       description: toolName.description,
+       inputSchema: toolName.inputSchema.shape,
+       outputSchema: undefined,
+     },
+     toolName.handler
+   );
+   ```
+4. Add tests if/when test infrastructure is created
 
-### Testing a Single Test File
+### Testing Commands
 
 ```bash
-NODE_OPTIONS=--experimental-vm-modules jest tests/unit/services/github-fetcher.test.ts
-```
+# Run all tests
+npm test
 
-### Running a Single Test
+# Watch mode for development
+npm run test:watch
 
-```bash
+# Generate coverage report
+npm run test:coverage
+
+# Test a specific file (when tests exist)
+NODE_OPTIONS=--experimental-vm-modules jest path/to/test.ts
+
+# Run a specific test pattern (when tests exist)
 NODE_OPTIONS=--experimental-vm-modules jest -t "test name pattern"
 ```
 
@@ -153,7 +186,29 @@ NODE_OPTIONS=--experimental-vm-modules jest -t "test name pattern"
 
 - **tsconfig.json**: Strict TypeScript config, targets ES2022, outputs to dist/
 - **package.json**: Scripts, dependencies, ES module configuration
-- **.eslintrc** (if present): TypeScript ESLint rules
+- **jest.config.js**: Jest configuration for ES modules
+
+## CLI Arguments
+
+The server accepts the following CLI arguments:
+
+- `--transport <stdio|http>`: Transport type (default: stdio)
+- `--port <number>`: Port for HTTP transport (default: 5000, only valid with --transport http)
+- `--apiKey <key>`: Google API key for image generation (can also use GOOGLE_API_KEY env var)
+- `--model <pro|normal>`: Fix model for all operations, hides model parameter from tools (optional)
+
+Examples:
+```bash
+# Stdio with API key
+nanobanana-api-mcp --apiKey "your-key"
+
+# HTTP on port 5000 with fixed pro model
+nanobanana-api-mcp --transport http --port 5000 --apiKey "your-key" --model pro
+
+# Using environment variable for API key
+export GOOGLE_API_KEY="your-key"
+nanobanana-api-mcp
+```
 
 ## Publishing
 
@@ -164,3 +219,13 @@ The `prepublishOnly` script ensures quality before publishing:
 4. Runs full test suite
 
 Only proceed with `npm publish` after this passes.
+
+## API Key Requirements
+
+This project requires a Google API key with access to Gemini image generation models. Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey).
+
+The API key can be provided in two ways:
+1. CLI argument: `--apiKey "your-api-key"`
+2. Environment variable: `GOOGLE_API_KEY="your-api-key"`
+
+If neither is provided, the server will throw an error on initialization.
