@@ -1,5 +1,9 @@
 # Nanobanana API MCP
 
+<p align="center">
+  <img src="./public/logo.png" alt="Nanobanana Logo" width="200">
+</p>
+
 [![npm version](https://badge.fury.io/js/nanobanana-api-mcp.svg)](https://www.npmjs.com/package/nanobanana-api-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
@@ -15,6 +19,14 @@ MCP (Model Context Protocol) server for generating and editing images using Goog
 - Multiple model options (Pro and Normal)
 - Built with TypeScript for type safety
 - Flexible configuration via CLI arguments or environment variables
+
+### Image Generation Example
+
+<p align="center">
+  <img src="./public/demo-generate.png" alt="Image Generation Demo" width="600">
+  <br>
+  <em>Generated image: "A serene mountain landscape at sunset with a lake in the foreground"</em>
+</p>
 
 ## Installation
 
@@ -374,6 +386,12 @@ Edits an existing image based on a text prompt using Google Gemini API.
 ```
 Generate an image of a futuristic cityscape with flying cars and save it to ./cityscape.png
 ```
+
+**Result:** The above command would generate an image similar to our demo:
+
+<p align="center">
+  <img src="./public/demo-generate.png" alt="Generated Landscape" width="400">
+</p>
 
 ### Example 2: Edit an existing image
 
