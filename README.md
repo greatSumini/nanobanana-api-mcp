@@ -94,7 +94,14 @@ Optionally, you can fix the model to use for all operations:
   "mcpServers": {
     "nanobanana": {
       "command": "npx",
-      "args": ["-y", "nanobanana-api-mcp", "--apiKey", "your-api-key-here", "--model", "pro"]
+      "args": [
+        "-y",
+        "nanobanana-api-mcp",
+        "--apiKey",
+        "your-api-key-here",
+        "--model",
+        "pro"
+      ]
     }
   }
 }
@@ -105,13 +112,17 @@ Optionally, you can fix the model to use for all operations:
 <details>
 <summary><b>Install in Claude Code</b></summary>
 
-Run this command:
+Run this command with your API key:
 
 ```sh
-claude mcp add nanobanana -- npx -y nanobanana-api-mcp
+claude mcp add nanobanana -- npx -y nanobanana-api-mcp --apiKey your-api-key-here
 ```
 
-Make sure to set your `GOOGLE_API_KEY` environment variable before starting Claude Code.
+Or with a fixed model:
+
+```sh
+claude mcp add nanobanana -- npx -y nanobanana-api-mcp --apiKey your-api-key-here --model pro
+```
 
 </details>
 
@@ -238,6 +249,7 @@ Nanobanana MCP provides the following tools that can be used by LLMs:
 Generates an image based on a text prompt using Google Gemini API.
 
 **Parameters:**
+
 - `prompt` (string, required): Text description of the image to generate
 - `output_path` (string, optional): Absolute path where the generated image will be saved. If not provided, returns base64 encoded image data instead
 - `model` (enum, optional): Model to use - "pro" (default) or "normal" (not shown if --model is provided via CLI)
@@ -247,6 +259,7 @@ Generates an image based on a text prompt using Google Gemini API.
 - `aspect_ratio` (enum, optional): Aspect ratio for the image - "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9" (default), "21:9"
 
 **Example (save to file):**
+
 ```json
 {
   "prompt": "A serene mountain landscape at sunset with a lake in the foreground",
@@ -257,6 +270,7 @@ Generates an image based on a text prompt using Google Gemini API.
 ```
 
 **Example (return base64):**
+
 ```json
 {
   "prompt": "A serene mountain landscape at sunset with a lake in the foreground",
@@ -266,12 +280,16 @@ Generates an image based on a text prompt using Google Gemini API.
 ```
 
 **With reference images:**
+
 ```json
 {
   "prompt": "An office group photo of these people, they are making funny faces",
   "output_path": "/absolute/path/to/group_photo.png",
   "model": "pro",
-  "reference_images_path": ["/absolute/path/to/person1.jpg", "/absolute/path/to/person2.jpg"]
+  "reference_images_path": [
+    "/absolute/path/to/person1.jpg",
+    "/absolute/path/to/person2.jpg"
+  ]
 }
 ```
 
@@ -280,6 +298,7 @@ Generates an image based on a text prompt using Google Gemini API.
 Edits an existing image based on a text prompt using Google Gemini API.
 
 **Parameters:**
+
 - `path` (string, optional): Absolute path to the image to edit. Either `path` or `image_base64` must be provided
 - `image_base64` (string, optional): Base64 encoded image data to edit. Either `path` or `image_base64` must be provided
 - `mime_type` (string, optional): MIME type of the base64 image (e.g., "image/png", "image/jpeg"). Required when using `image_base64`
@@ -292,6 +311,7 @@ Edits an existing image based on a text prompt using Google Gemini API.
 - `aspect_ratio` (enum, optional): Aspect ratio for the image - "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9" (default), "21:9"
 
 **Example (path input, save to file):**
+
 ```json
 {
   "path": "/absolute/path/to/original_image.png",
@@ -302,6 +322,7 @@ Edits an existing image based on a text prompt using Google Gemini API.
 ```
 
 **Example (path input, overwrite original):**
+
 ```json
 {
   "path": "/absolute/path/to/image.png",
@@ -310,6 +331,7 @@ Edits an existing image based on a text prompt using Google Gemini API.
 ```
 
 **Example (base64 input, return base64):**
+
 ```json
 {
   "image_base64": "iVBORw0KGgoAAAANSUhEUgAA...",
@@ -319,6 +341,7 @@ Edits an existing image based on a text prompt using Google Gemini API.
 ```
 
 **Example (base64 input, save to file):**
+
 ```json
 {
   "image_base64": "iVBORw0KGgoAAAANSUhEUgAA...",
@@ -329,12 +352,16 @@ Edits an existing image based on a text prompt using Google Gemini API.
 ```
 
 **With reference images:**
+
 ```json
 {
   "path": "/absolute/path/to/portrait.jpg",
   "prompt": "Apply the style and lighting from these reference images",
   "output_path": "/absolute/path/to/styled_portrait.jpg",
-  "reference_images_path": ["/absolute/path/to/style_ref1.jpg", "/absolute/path/to/style_ref2.jpg"]
+  "reference_images_path": [
+    "/absolute/path/to/style_ref1.jpg",
+    "/absolute/path/to/style_ref2.jpg"
+  ]
 }
 ```
 
@@ -343,6 +370,7 @@ Edits an existing image based on a text prompt using Google Gemini API.
 ### Example 1: Generate a simple image
 
 **In Cursor/Claude Code:**
+
 ```
 Generate an image of a futuristic cityscape with flying cars and save it to ./cityscape.png
 ```
@@ -350,6 +378,7 @@ Generate an image of a futuristic cityscape with flying cars and save it to ./ci
 ### Example 2: Edit an existing image
 
 **In Cursor/Claude Code:**
+
 ```
 Edit the image at ./photo.jpg and add a sunset sky background, save it as ./photo_sunset.jpg
 ```
@@ -357,6 +386,7 @@ Edit the image at ./photo.jpg and add a sunset sky background, save it as ./phot
 ### Example 3: Generate with reference images
 
 **In Cursor/Claude Code:**
+
 ```
 Create an office group photo using the face images at ./face1.jpg, ./face2.jpg, and ./face3.jpg.
 Make them look like they're at a fun team meeting. Save to ./team_photo.png
@@ -382,6 +412,7 @@ nanobanana-api-mcp --apiKey "your-api-key-here" --transport http --port 5000
 ```
 
 **CLI Options:**
+
 - `--apiKey <key>`: Google API key for image generation (can also use GOOGLE_API_KEY env var)
 - `--model <pro|normal>`: Fix the model for all operations (optional, hides model parameter from tools)
 - `--transport <stdio|http>`: Transport type (default: stdio)
